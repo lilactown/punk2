@@ -1,0 +1,7 @@
+/.nrepl-port
+.shadow-cljs/
+extension/js/
+extension/out/
+.DS_Store
+node_modules/
+public/js/

@@ -1,0 +1,35 @@
+{:source-paths ["src"]
+ :dependencies [[binaryage/devtools "0.9.10"]
+                [devcards "0.2.5"]
+                [binaryage/chromex "0.8.0"]
+                [lilactown/hx "0.5.1"]
+                [lilactown/hx-frisk "0.0.2-SNAPSHOT"]
+                [lilactown/clinch "1.0.0"]
+                [com.andrewmcveigh/cljs-time "0.5.2"]]
+ :builds
+ {:app
+  {:target :browser
+   :compiler-options {:devcards true}
+   :devtools {:http-root    "public"
+              :http-port    8787
+              :preloads     [devtools.preload]}
+   :modules {:main {:entries [punk.ui.core]}
+             :devcards {:entries [punk.ui.devcards]
+                        :depends-on #{:main}}}}
+
+  :extension
+  {:target :chrome-extension
+   :extension-dir "extension"
+   :manifest-file "extension/manifest.edn"
+   :outputs
+   {:background {:output-type :chrome/background
+                 :init-fn punk.ui.chrome.background/init!}
+    :content-script {:output-type :chrome/single-file
+                     :entries [punk.shells.chrome.content-script]}}}
+
+  :devtools-panel
+  {:target :browser
+   :output-dir "extension/js/ui"
+   :asset-path "js/ui"
+   :modules {:main {:entries [punk.shells.chrome.panel]}}
+   :devtools {:devtools-url "http://localhost:9630"}}}}

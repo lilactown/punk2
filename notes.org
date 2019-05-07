@@ -1,0 +1,7 @@
+* setting up shadow-cljs
+
+- ~:chrome-extension~
+
+** Background script setup
+
+   ~

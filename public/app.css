@@ -1,0 +1,125 @@
+body, .punk-body-container {
+    font-family: sans-serif;
+}
+
+pre {
+    margin: 0;
+}
+
+code {
+    font-size: 90%;
+}
+
+.taplist {
+    padding: 10px;
+}
+
+.taplist--entry--tools {
+    background: #ffffef;
+    padding: 2px 12px 2px 8px;
+    margin: 0 0 0 3px;
+    font-size: 0.6rem;
+    border: 1px solid #efefef;
+}
+
+.taplist--entry--tools:hover {
+    background: #ffefff;
+}
+
+.taplist--entry--tools > button {
+    padding: 0 5px;
+    background: none;
+    border: 0;
+    margin-right: 5px;
+}
+
+.taplist--entry--tools > button:first-child {
+    margin-left: -3px;
+}
+
+.taplist--entry--tools > button:hover {
+    cursor: pointer;
+}
+
+.taplist--entry--tools--close-icon:after {
+    content: "X";
+}
+
+.taplist--entry--tools--inspect-icon:after {
+    content: "🔍";
+}
+
+
+.taplist--entry {
+    /* border: 1px solid #999999; */
+    padding: 0px 0px;
+    margin: 3px 0;
+}
+
+.taplist--entry--body > div {
+    padding: 2px 12px 2px 8px;
+    background: #efefef;
+    margin: 0 0 0 3px;
+}
+
+.taplist--entry-selected {
+    margin-top: 0;
+}
+
+.taplist--entry--body:hover > div {
+    background: #dfdfdf;
+    cursor: pointer;
+}
+
+.taplist--entry-selected:hover > div {
+    background: #efefef;
+    cursor: inherit;
+}
+
+.taplist--entry--separator {
+    border-right: 1px solid #999999;
+}
+
+.taplist--entry > div:last-child {
+    border-right: 0;
+}
+
+.inspector {
+    height: 100%;
+}
+
+.inspector--code-view {
+    padding: 10px;
+}
+
+.inspector--coll-view {
+    border-top: 1px solid #afafaf;
+    display: flex;
+    max-height: 100%;
+}
+
+.inspector--coll-view--indices {
+    width: 80px;
+    border-right: 1px solid #afafaf; 
+}
+
+.inspector--coll-view--indices > div {
+    /* border-bottom: 1px solid #efefef; */
+    background: #efefef;
+    text-align: right;
+    padding: 1px 15px;
+    margin: 3px
+}
+
+.inspector--coll-view--indices > div:hover {
+    background: #dfdfdf;
+    cursor: pointer;
+}
+
+.inspector--coll-view--indices-selected {
+    background: #dfdfdf !important;
+}
+
+.inspector--coll-view--body {
+    overflow-x: hidden;
+}
