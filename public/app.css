@@ -11,7 +11,7 @@ code {
 }
 
 .taplist {
-    padding: 10px;
+    padding: 8px;
 }
 
 .taplist--entry--tools {
@@ -122,4 +122,99 @@ code {
 
 .inspector--coll-view--body {
     overflow-x: hidden;
+}
+
+
+/* tree view */
+
+.inspector--tree-view {
+    height: 100%;
+    overflow: scroll;
+    padding: 8px;
+}
+
+.inspector--tree-node {
+    margin: 3px;
+}
+
+.inspector--tree-node:first-child {
+    margin-top: 0;
+}
+
+.inspector--tree-node--item:hover ~ .inspector--tree-node--container, .inspector--tree-node--item:hover {
+    background: rgba(180, 250, 140, 0.8);
+    /* background: rgba(130, 130, 250, 0.3); */
+}
+
+.inspector--tree-node--item {
+    background: rgba(200,200,200,0.3);
+    /* padding: 3px; */
+    /* padding-left: 10px; */
+
+    /* padding-left: 5px; */
+    /* padding-right: 8px; */
+    /* overflow-x: hidden; */
+    display: flex;
+}
+
+.inspector--tree-node--label {
+    padding-right: 15px;
+    /* background: rgba(200,200,200, 0.3); */
+}
+
+.inspector--tree-node--label:hover {
+    cursor: pointer;
+}
+
+.inspector--tree-node--preview {
+    padding-left: 10px
+}
+
+.inspector--tree-node--preview > code,
+.inspector--tree-node--preview > pre,
+.inspector--tree-node--item > code,
+.inspector--tree-node--item > pre {
+    display: inline !important;
+}
+
+.inspector--tree-node--arrow {
+    display: inline-block;
+    margin-right: 10px;
+    /* background: rgba(200,200,200, 0.3); */
+
+}
+
+.inspector--tree-node--arrow:hover {
+    cursor: pointer;
+}
+
+.inspector--tree-node--arrow:after {
+    content: "▾";
+}
+
+.inspector--tree-node--arrow-collapsed {
+    display: inline-block;
+    transform: rotate(-90deg);
+    margin-right: 10px;
+    /* background: rgba(200,200,200, 0.3); */
+
+}
+
+.inspector--tree-node--arrow-collapsed:hover {
+    cursor: pointer;
+}
+
+.inspector--tree-node--arrow-collapsed:after {
+    content: "▾";
+}
+
+
+.inspector--tree-node--container {
+    padding-top: 3px;
+    padding-left: 12px;
+    background: rgba(200, 200, 200, 0.3);
+}
+
+.inspector--tree-node--container-collapsed {
+
 }

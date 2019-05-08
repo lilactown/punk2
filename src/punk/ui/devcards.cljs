@@ -44,7 +44,9 @@
 (dc/defcard main
   (hx/f [:div {:style {:height "300px"}
                :class "punk-body-container"}
-         [core/Main]]))
+         [core/Main {:initial-taps [{:id 0 :ts 1555279100481 :value med-structure :metadata nil}
+                                    {:id 1 :ts 1555276265237 :value {:foo 'bar} :metadata nil}
+                                    {:id 2 :ts 1555274864007 :value {:foo 'bar} :metadata nil}]}]]))
 
 (dc/defcard tap-list
   (hx/f [:div {:style {:height "300px"}
@@ -52,9 +54,9 @@
          ;; [TapEntry ]
          ;; [TapEntry ]
          ;; [TapEntry ]
-         [core/TapList {:entries [{:ts 1555279100481 :value med-structure :metadata nil}
-                                  {:ts 1555276265237 :value {:foo 'bar} :metadata nil}
-                                  {:ts 1555274864007 :value {:foo 'bar} :metadata nil}]}]]))
+         [core/TapList {:entries [{:id 0 :ts 1555279100481 :value med-structure :metadata nil}
+                                  {:id 1 :ts 1555276265237 :value {:foo 'bar} :metadata nil}
+                                  {:id 2 :ts 1555274864007 :value {:foo 'bar} :metadata nil}]}]]))
 
 (dc/defcard inspector
   (hx/f [:div {:style {:height "300px"}
@@ -70,3 +72,25 @@
   (hx/f [:div {:style {:height "300px"}
                :class "punk-body-container"}
          [core/CollView {:value med-structure}]]))
+
+(dc/defcard tree-view
+  (hx/f  [:div {:style {:height "300px"}
+                :class "punk-body-container"}
+          [core/TreeView {:value med-structure}]]))
+
+(dc/defcard tree-view--map
+  (hx/f  [:div {:style {:height "300px"}
+                :class "punk-body-container"}
+          [core/TreeView {:value {:foo ["bar"]
+                                  :baz {:asdf 1234 :jkl 5678
+                                        ['zxcvbn] {'qwerty 'yuiop}}}}]]))
+
+(dc/defcard tree-view--list
+  (hx/f  [:div {:style {:height "300px"}
+                :class "punk-body-container"}
+          [core/TreeView {:value (range 7 23)}]]))
+
+(dc/defcard tree-view--set
+  (hx/f  [:div {:style {:height "300px"}
+                :class "punk-body-container"}
+          [core/TreeView {:value #{:foo :bar #{:baz 123 'asdf #{'jkl}}}}]]))
