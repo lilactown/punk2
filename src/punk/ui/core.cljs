@@ -190,7 +190,8 @@
                     :height "35px"
                     :position "absolute"
                     :bottom 0
-                    :width "100%"}}
+                    :width "100%"
+                    :z-index 2}}
       [:select {:value (str current-view)
                 :on-change #(set-current-view (keyword (s/replace-first (-> % .-target .-value) #":" "")))}
        (for [view-id (keys views)]
