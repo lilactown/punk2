@@ -22,7 +22,6 @@
 (defnc Code [{:keys [value pprint?]}]
   [rsh/default {:language "clojure"
                 :style hljs/githubGist
-                :onClick #(.stopPropagation %)
                 :customStyle (if pprint?
                                #js {:padding 0
                                     :background "none"}
@@ -183,7 +182,7 @@
    [:div {:style {:background "#ffffef"
                   :height "35px"}}
     [:select
-     [:option ":punk.view/coll"]
+     [:option ":punk.view/tree"]
      [:option ":punk.view/code"]]]])
 
 
