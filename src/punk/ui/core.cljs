@@ -5,6 +5,7 @@
             [cljs-time.core :as t]
             [cljs-time.format :as tf]
             [cljs-time.coerce :as tc]
+            [clojure.core.async :as a]
             [clojure.string :as s]
             ["react-syntax-highlighter" :as rsh]
             ["react-syntax-highlighter/dist/esm/styles/hljs" :as hljs]
@@ -131,11 +132,10 @@
 (defnc TapEntry [{:keys [ts value metadata selected? on-select on-inspect]}]
   [:div {:class "taplist--entry"}
    (when selected?
-     [:div {:on-click on-select
-            :class "taplist--entry--tools"}
-      #_[:button
-         {:on-click on-click}
-         [:span {:class "taplist--entry--tools--close-icon"}]]
+     [:div {:class "taplist--entry--tools"}
+      [:button
+       {:on-click on-select}
+       [:span {:class "taplist--entry--tools--close-icon"}]]
       [:button
        {:on-click on-inspect}
        [:span {:class "taplist--entry--tools--inspect-icon"}]]])
@@ -169,21 +169,31 @@
                                         (update-selected id))
                           :on-inspect #(inspect-value entry))]))]))
 
+(def views
+  {:punk.view/tree TreeView
+   :punk.view/code CodeView})
+
 (defnc Inspector [{:keys [value on-next on-back on-breadcrumb]}]
-  [:div {:class "inspector"
-         :style {:display "flex"
-                 :flex-direction "column"}}
-   [:div {:style {:flex 1
-                  :min-height "0px"
-                  :overflow-y "scroll"}}
-    #_[CodeView {:value value}]
-    #_[CollView {:value value}]
-    [TreeView {:value value}]]
-   [:div {:style {:background "#ffffef"
-                  :height "35px"}}
-    [:select
-     [:option ":punk.view/tree"]
-     [:option ":punk.view/code"]]]])
+  (let [[current-view set-current-view] (hooks/useState :punk.view/tree)]
+    (prn current-view)
+    [:div {:class "inspector"
+           ;; :style {:display "flex"
+           ;;         :flex-direction "column"}
+           :style {:position "relative"}
+           }
+     [:div {:style {:flex 1
+                    :min-height "0px"
+                    :overflow-y "scroll"}}
+      [(views current-view) {:value value}]]
+     [:div {:style {:background "#ffffef"
+                    :height "35px"
+                    :position "absolute"
+                    :bottom 0
+                    :width "100%"}}
+      [:select {:value (str current-view)
+                :on-change #(set-current-view (keyword (s/replace-first (-> % .-target .-value) #":" "")))}
+       (for [view-id (keys views)]
+         [:option (str view-id)])]]]))
 
 
 (defnc TopControls [_]
@@ -194,11 +204,44 @@
      [:button {:on-click #(set-route :inspector)} "Inspector"]
      #_[:button "Settings"]]))
 
-(defnc Main [{:keys [initial-taps]}]
+
+
+(defn useChan [chan on-take on-close]
+  (let [cleanup? (hooks/useIRef false)]
+    (hooks/useEffect
+     (fn []
+       (prn "Channel open")
+       (a/go-loop []
+         (if @cleanup?
+           (on-close)
+           (if-let [v (a/<! chan)]
+             (do (on-take v)
+                 (recur))
+             (on-close))))
+       #(reset! cleanup? true))
+     [chan on-take on-close])))
+
+(defn taps-reducer [taps-list [ev & payload]]
+  (case ev
+    ;; tied to old structure atm
+    :entry (let [[id payload] payload]
+             (conj taps-list {:id id
+                              :value (:value payload)
+                              :metadata (:meta payload)
+                              :ts (js/Date.now)}))))
+
+(defn on-close []
+  (prn "Channel closed"))
+
+(defnc Main [{:keys [initial-taps tap-chan]}]
   (let [[router update-router] (hooks/useState {:current :tap-list})
-        [tap-list update-taps] (hooks/useState (or initial-taps []))
+        [tap-list update-taps] (hooks/useReducer taps-reducer (or initial-taps '()))
         [inspected-value update-inspected] (hooks/useState nil)
         set-route #(update-router assoc :current %)]
+    (js/console.log tap-list)
+    (useChan tap-chan
+             update-taps
+             on-close)
     [:provider {:context routing-context
                 :value [router set-route]}
      [:div {:style {:border "1px solid #d3d3d3"

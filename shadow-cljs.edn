@@ -14,6 +14,8 @@
               :http-port    8787
               :preloads     [devtools.preload]}
    :modules {:main {:entries [punk.ui.core]}
+             :remote {:entries [punk.ui.shells.remote]
+                      :depends-on #{:main}}
              :devcards {:entries [punk.ui.devcards]
                         :depends-on #{:main}}}}
 

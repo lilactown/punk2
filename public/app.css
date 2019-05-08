@@ -1,3 +1,12 @@
+body, html {
+    margin: 0;
+    padding: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body, .punk-body-container {
     font-family: sans-serif;
 }
@@ -7,7 +16,12 @@ pre {
 }
 
 code {
-    font-size: 90%;
+}
+
+#connection {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .taplist {
@@ -15,7 +29,7 @@ code {
 }
 
 .taplist--entry--tools {
-    background: #ffffef;
+    background: rgba(0, 250, 0, 0.3);
     padding: 2px 12px 2px 8px;
     margin: 0 0 0 3px;
     font-size: 0.6rem;
@@ -23,7 +37,7 @@ code {
 }
 
 .taplist--entry--tools:hover {
-    background: #ffefff;
+    /* background: #ffefff; */
 }
 
 .taplist--entry--tools > button {
@@ -67,7 +81,7 @@ code {
 }
 
 .taplist--entry--body:hover > div {
-    background: #dfdfdf;
+    background: rgba(0, 250, 0, 0.3);
     cursor: pointer;
 }
 
