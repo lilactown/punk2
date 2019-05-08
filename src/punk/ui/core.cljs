@@ -7,6 +7,7 @@
             [cljs-time.coerce :as tc]
             [clojure.core.async :as a]
             [clojure.string :as s]
+            [clojure.pprint]
             ["react-syntax-highlighter" :as rsh]
             ["react-syntax-highlighter/dist/esm/styles/hljs" :as hljs]
             [goog.object :as gobj]))

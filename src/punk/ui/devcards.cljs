@@ -51,9 +51,6 @@
 (dc/defcard tap-list
   (hx/f [:div {:style {:height "300px"}
                :class "punk-body-container"}
-         ;; [TapEntry ]
-         ;; [TapEntry ]
-         ;; [TapEntry ]
          [core/TapList {:entries [{:id 0 :ts 1555279100481 :value med-structure :metadata nil}
                                   {:id 1 :ts 1555276265237 :value {:foo 'bar} :metadata nil}
                                   {:id 2 :ts 1555274864007 :value {:foo 'bar} :metadata nil}]}]]))
