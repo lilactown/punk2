@@ -9,6 +9,7 @@ body, html {
 
 body, .punk-body-container {
     font-family: sans-serif;
+    color: #333;
 }
 
 pre {
@@ -18,11 +19,46 @@ pre {
 code {
 }
 
-#connection {
+#remote-app {
     height: 100vh;
     display: flex;
     flex-direction: column;
 }
+
+.connection {
+    padding: 5px 5px 3px;
+    background: #dedede;
+}
+
+.connection--status-indicator-connected {
+    border-radius: 25px;
+    border: 1px solid #eee;
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    margin-left: 5px;
+    margin-right: 10px;
+    margin-bottom: -2px;
+    background: rgba(50, 100, 250, 1.0);
+}
+
+.connection--status-indicator-disconnected {
+    border-radius: 25px;
+    border: 1px solid #eee;
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    margin-left: 5px;
+    margin-right: 10px;
+    margin-bottom: -2px;
+    background: rgba(250, 50, 50, 1);
+}
+
+/* .connection--status-indicator-connected::after { */
+/*     content: "⚫️️"; */
+/*     color: "green"; */
+/*     /\* content: ""; *\/ */
+/* } */
 
 .taplist {
     padding: 8px;

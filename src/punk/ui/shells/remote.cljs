@@ -89,17 +89,21 @@
 (defnc Connection [_]
   (let [state (useDeref state)]
     (println "render")
-    [:div {:style {:background-color "#eee"
-                   :padding "10px"}}
-     (prn-str state)]))
+    [:div {:class "connection"}
+     ;; (prn-str state)
+     (case (:status state)
+       :open [:div [:span {:class "connection--status-indicator-connected"}]
+              "Connected"]
+       :closed [:div [:span {:class "connection--status-indicator-disconnected"}]
+                "Disconnected"])]))
 
 (defn ^:export ^:dev/after-load start []
   (println "Starting!")
   (when (= :closed (:status @state))
     (connect {:port 9876}))
-  (let [container (or (. js/document getElementById "connection")
+  (let [container (or (. js/document getElementById "remote-app")
                       (let [new-container (. js/document createElement "div")]
-                        (. new-container setAttribute "id" "connection")
+                        (. new-container setAttribute "id" "remote-app")
                         (-> js/document .-body (.appendChild new-container))
                         new-container))]
     (react-dom/render (hx/f [:<>
