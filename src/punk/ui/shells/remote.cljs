@@ -28,6 +28,7 @@
 
 (defn connect [{:keys [port]}]
   (let [conn (js/WebSocket. "ws://localhost:9876/ws")]
+    (swap! state assoc :conn conn)
     ;; websocket config
     (.addEventListener conn "open"
                        (fn [ev]
@@ -48,6 +49,7 @@
         (recur)))))
 
 (defn close []
+  (prn "closign")
   (when (:conn @state)
     (.close (:conn @state))))
 
@@ -91,11 +93,19 @@
     (println "render")
     [:div {:class "connection"}
      ;; (prn-str state)
-     (case (:status state)
-       :open [:div [:span {:class "connection--status-indicator-connected"}]
-              "Connected"]
-       :closed [:div [:span {:class "connection--status-indicator-disconnected"}]
-                "Disconnected"])]))
+     [:button {:on-click (case (:status state)
+                           :open #(close)
+                           :closed #(connect {:port 9876}))
+               :class ["connection--status-button" (case (:status state)
+                                                     :open "connection--status-button-connected"
+                                                     :closed "connection--status-button-disconnected")]}
+      (case (:status state)
+        :open [:<>
+               [:span {:class "connection--status-indicator-connected"}]
+               "Connected"]
+        :closed [:<>
+                 [:span {:class "connection--status-indicator-disconnected"}]
+                 "Disconnected"])]]))
 
 (defn ^:export ^:dev/after-load start []
   (println "Starting!")

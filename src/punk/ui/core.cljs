@@ -64,10 +64,7 @@
   (let [[collapsed? set-collapsed] (hooks/useState default)]
     [:div {:class "inspector--tree-node"}
      [:div {:class "inspector--tree-node--item"}
-      [:div {:style {:display "flex"
-                     :background "rgba(200,200,200, 0.3)"
-                     :padding-left "10px"}
-             :on-click #(set-collapsed not)}
+      [:div {:on-click #(set-collapsed not)}
        [:div {:class (if collapsed?
                        "inspector--tree-node--arrow-collapsed"
                        "inspector--tree-node--arrow")}]
@@ -143,13 +140,12 @@
    [:div {:style {:display "flex"}
           :class ["taplist--entry--body" (when selected? "taplist--entry-selected")]
           :on-click #(when-not selected? (on-select))}
-    [:div
+    [:div {:class "taplist--entry--timestamp"}
      (->> ts
           (tc/from-long)
           (t/to-default-time-zone)
           (tf/unparse ts-format))]
-    [:div {:style {:flex 1
-                   :overflow "hidden"}}
+    [:div {:class "taplist--entry--value"}
      [Code {:value value :pprint? selected?}]]
     #_[:div {:style {:flex 2}} metadata]]])
 
@@ -178,10 +174,7 @@
 (defnc Inspector [{:keys [value on-next on-back on-breadcrumb]}]
   (let [[current-view set-current-view] (hooks/useState :punk.view/tree)]
     [:div {:class "inspector"
-           ;; :style {:display "flex"
-           ;;         :flex-direction "column"}
-           :style {:position "relative"}
-           }
+           :style {:position "relative"}}
      [:div {:style {:flex 1
                     :min-height "0px"
                     :overflow-y "scroll"}}
@@ -199,12 +192,14 @@
 
 
 (defnc TopControls [_]
-  (let [[_ set-route] (hooks/useContext routing-context)]
-    [:div {:style {:height "100%"
-                   :display "flex"}}
-     [:button {:on-click #(set-route :tap-list)} "Taps"]
-     [:button {:on-click #(set-route :inspector)} "Inspector"]
-     #_[:button "Settings"]]))
+  (let [[router set-route] (hooks/useContext routing-context)]
+    [:div {:class "top-controls"}
+     (for [route (:routes router)]
+       [:button {:key (:id route)
+                 :class ["top-controls--tab" (when (= (:id route) (:current router))
+                                               "top-controls--tab-selected")]
+                 :on-click #(set-route (:id route))}
+        (:label route)])]))
 
 
 
@@ -240,7 +235,11 @@
   (prn "Channel closed"))
 
 (defnc Main [{:keys [initial-taps tap-chan]}]
-  (let [[router update-router] (hooks/useState {:current :tap-list})
+  (let [[router update-router] (hooks/useState {:current :tap-list
+                                                :routes [{:id :tap-list
+                                                          :label "Tap list"}
+                                                         {:id :inspector
+                                                          :label "Inspector"}]})
         [tap-list update-taps] (alpha/useReducerOnce taps-reducer (or initial-taps '()) ::tap-list)
         [inspected-value update-inspected] (hooks/useState nil)
         set-route #(update-router assoc :current %)]

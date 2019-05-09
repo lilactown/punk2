@@ -30,11 +30,30 @@ code {
     background: #dedede;
 }
 
+.connection--status-button {
+    border: 0;
+    font-size: 0.8rem;
+    border-radius: 5px;
+    padding: 3px 8px 3px 0px;
+    background: #dedede;
+}
+
+.connection--status-button:hover {
+    background: #eee;
+    cursor: pointer;
+}
+
+.connection--status-button-connected:hover {
+}
+
+.connection--status-button-disconnected:hover {
+}
+
 .connection--status-indicator-connected {
     border-radius: 25px;
     border: 1px solid #eee;
-    width: 15px;
-    height: 15px;
+    width: 13px;
+    height: 13px;
     display: inline-block;
     margin-left: 5px;
     margin-right: 10px;
@@ -45,8 +64,8 @@ code {
 .connection--status-indicator-disconnected {
     border-radius: 25px;
     border: 1px solid #eee;
-    width: 15px;
-    height: 15px;
+    width: 13px;
+    height: 13px;
     display: inline-block;
     margin-left: 5px;
     margin-right: 10px;
@@ -60,21 +79,39 @@ code {
 /*     /\* content: ""; *\/ */
 /* } */
 
+
+.top-controls {
+    height: 100%;
+    display: flex;
+    padding-top: 4px;
+}
+
+.top-controls--tab {
+    background: #eee;
+    border: 1px solid #eee;
+    border-bottom: 0;
+    margin-left: 5px;
+    margin-bottom: -1px;
+}
+
+.top-controls--tab-selected {
+    background: white;
+}
+
+
 .taplist {
     padding: 8px;
 }
 
 .taplist--entry--tools {
-    /* background: rgba(0, 250, 0, 0.3); */
-    background: #dfdfdf;
-    padding: 2px 12px 2px 8px;
+    background: rgb(239, 255, 255);
+    padding: 0px 12px 2px 8px;
     margin: 0 0 0 3px;
     font-size: 0.6rem;
     border: 1px solid #efefef;
 }
 
 .taplist--entry--tools:hover {
-    /* background: #ffefff; */
 }
 
 .taplist--entry--tools > button {
@@ -138,6 +175,15 @@ code {
 
 .taplist--entry > div:last-child {
     border-right: 0;
+}
+
+.taplist--entry--timestamp {
+    font-family: monospace;
+}
+
+.taplist--entry--value {
+    flex: 1;
+    overflow: hidden;
 }
 
 .inspector {
@@ -207,9 +253,15 @@ code {
     overflow: hidden;
 }
 
-.inspector--tree-node--item > * {
+.inspector--tree-node--item > div {
     padding-top: 3px;
     padding-bottom: 0px;
+}
+
+.inspector--tree-node--item > div {
+    display: flex;
+    background: rgba(200,200,200, 0.3);
+    padding-left: 10px;
 }
 
 .inspector--tree-node--label {
