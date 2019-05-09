@@ -29,7 +29,8 @@ code {
 }
 
 .taplist--entry--tools {
-    background: rgba(0, 250, 0, 0.3);
+    /* background: rgba(0, 250, 0, 0.3); */
+    background: #dfdfdf;
     padding: 2px 12px 2px 8px;
     margin: 0 0 0 3px;
     font-size: 0.6rem;
@@ -70,14 +71,19 @@ code {
     margin: 3px 0;
 }
 
+.taplist--entry:first-child {
+    margin-top: 0;
+}
+
 .taplist--entry--body > div {
     padding: 2px 12px 2px 8px;
     background: #efefef;
     margin: 0 0 0 3px;
 }
 
-.taplist--entry-selected {
+.taplist--entry-selected > div {
     margin-top: 0;
+    background: rgba(0, 250, 0, 0.3);
 }
 
 .taplist--entry--body:hover > div {
@@ -86,7 +92,7 @@ code {
 }
 
 .taplist--entry-selected:hover > div {
-    background: #efefef;
+    /* background: #efefef; */
     cursor: inherit;
 }
 
@@ -165,6 +171,11 @@ code {
     overflow: hidden;
 }
 
+.inspector--tree-node--item > * {
+    padding-top: 3px;
+    padding-bottom: 0px;
+}
+
 .inspector--tree-node--label {
     padding-right: 15px;
 }
@@ -184,9 +195,18 @@ code {
     display: inline !important;
 }
 
+.inspector--tree-node--arrow, .inspector--tree-node--arrow-collapsed {
+    -moz-transition: all 0.1s;
+    -o-transition: all 0.1s;
+    -ms-transition: all 0.1s;
+    -webkit-transition: all 0.1s;
+    transition: all 0.1s;
+}
+
 .inspector--tree-node--arrow {
     display: inline-block;
     margin-right: 10px;
+    margin-top: -2px;
     /* background: rgba(200,200,200, 0.3); */
 
 }
@@ -203,6 +223,7 @@ code {
     display: inline-block;
     transform: rotate(-90deg);
     margin-right: 10px;
+    margin-top: -2px;
     /* background: rgba(200,200,200, 0.3); */
 
 }

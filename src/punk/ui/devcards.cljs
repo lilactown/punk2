@@ -1,7 +1,6 @@
 (ns punk.ui.devcards
   (:require [devcards.core :as dc :include-macros true]
             [hx.react :as hx :refer [defnc]]
-            [clinch.hooks :as hooks]
             [cljs-time.core :as t]
             [cljs-time.format :as tf]
             [cljs-time.coerce :as tc]

@@ -88,9 +88,6 @@
 
 (defnc Connection [_]
   (let [state (useDeref state)]
-    (hooks/useEffect (fn []
-                       (connect {:port 9876})
-                       #(close)) [])
     (println "render")
     [:div {:style {:background-color "#eee"
                    :padding "10px"}}
@@ -98,6 +95,8 @@
 
 (defn ^:export ^:dev/after-load start []
   (println "Starting!")
+  (when (= :closed (:status @state))
+    (connect {:port 9876}))
   (let [container (or (. js/document getElementById "connection")
                       (let [new-container (. js/document createElement "div")]
                         (. new-container setAttribute "id" "connection")

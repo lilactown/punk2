@@ -156,19 +156,20 @@
 
 (defnc TapList [{:keys [entries inspect-value]}]
   (let [[selected update-selected] (alpha/useStateOnce nil ::tap-list.selected)]
-    [:div {:class "taplist"
-           ;; :style {:overflow "auto"
-           ;;         :min-height "0px"}
-           }
-     (for [entry entries]
-       (let [{:keys [id]} entry]
-         [TapEntry (assoc entry
-                          :key id
-                          :selected? (= selected id)
-                          :on-select #(if (= selected id)
-                                        (update-selected nil)
-                                        (update-selected id))
-                          :on-inspect #(inspect-value entry))]))]))
+    [:div {:class "taplist"}
+     (if (empty? entries)
+       [:div {:style {:text-align "center"
+                      :margin-top "50px"}}
+        [:h2 "Nothing here yet."]]
+       (for [entry entries]
+         (let [{:keys [id]} entry]
+           [TapEntry (assoc entry
+                            :key id
+                            :selected? (= selected id)
+                            :on-select #(if (= selected id)
+                                          (update-selected nil)
+                                          (update-selected id))
+                            :on-inspect #(inspect-value entry))])))]))
 
 (def views
   {:punk.view/tree TreeView
@@ -176,7 +177,6 @@
 
 (defnc Inspector [{:keys [value on-next on-back on-breadcrumb]}]
   (let [[current-view set-current-view] (hooks/useState :punk.view/tree)]
-    (prn current-view)
     [:div {:class "inspector"
            ;; :style {:display "flex"
            ;;         :flex-direction "column"}
@@ -209,17 +209,20 @@
 
 
 (defn useChan [chan on-take on-close]
-  (let [cleanup? (hooks/useIRef false)]
+  (let [cleanup? (hooks/useIRef false)
+        deps (hooks/useIRef chan)]
+    (prn (= chan @deps))
     (hooks/useEffect
      (fn []
        (prn "Channel open")
        (a/go-loop []
-         (if @cleanup?
-           (on-close)
-           (if-let [v (a/<! chan)]
+         (let [v (a/<! chan)]
+           (prn v)
+
+           (if (or @cleanup? (nil? v))
+             (on-close)
              (do (on-take v)
-                 (recur))
-             (on-close))))
+                 (recur)))))
        #(reset! cleanup? true))
      [chan on-take on-close])))
 
@@ -232,15 +235,15 @@
                               :metadata (:meta payload)
                               :ts (js/Date.now)}))))
 
+
 (defn on-close []
   (prn "Channel closed"))
 
 (defnc Main [{:keys [initial-taps tap-chan]}]
   (let [[router update-router] (hooks/useState {:current :tap-list})
-        [tap-list update-taps] (hooks/useReducer taps-reducer (or initial-taps '()))
+        [tap-list update-taps] (alpha/useReducerOnce taps-reducer (or initial-taps '()) ::tap-list)
         [inspected-value update-inspected] (hooks/useState nil)
         set-route #(update-router assoc :current %)]
-    (js/console.log tap-list)
     (useChan tap-chan
              update-taps
              on-close)
