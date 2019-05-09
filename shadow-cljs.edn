@@ -1,11 +1,12 @@
-{:source-paths ["src"]
- :dependencies [[binaryage/devtools "0.9.10"]
-                [devcards "0.2.5"]
-                [binaryage/chromex "0.8.0"]
-                [lilactown/hx "0.5.1"]
-                [lilactown/hx-frisk "0.0.2-SNAPSHOT"]
-                [lilactown/clinch "1.0.0"]
-                [com.andrewmcveigh/cljs-time "0.5.2"]]
+{;; :source-paths ["src"]
+ :deps true
+ ;; :dependencies [[binaryage/devtools "0.9.10"]
+ ;;                [devcards "0.2.5"]
+ ;;                [binaryage/chromex "0.8.0"]
+ ;;                [lilactown/hx "0.5.1"]
+ ;;                [lilactown/hx-frisk "0.0.2-SNAPSHOT"]
+ ;;                [lilactown/clinch "1.0.0"]
+ ;;                [com.andrewmcveigh/cljs-time "0.5.2"]]
  :builds
  {:app
   {:target :browser
