@@ -89,23 +89,30 @@
 
 
 (defnc Connection [_]
-  (let [state (useDeref state)]
-    (println "render")
+  (let [state (useDeref state)
+        [hover set-hover] (hooks/useState false)]
     [:div {:class "connection"}
      ;; (prn-str state)
      [:button {:on-click (case (:status state)
                            :open #(close)
                            :closed #(connect {:port 9876}))
-               :class ["connection--status-button" (case (:status state)
-                                                     :open "connection--status-button-connected"
-                                                     :closed "connection--status-button-disconnected")]}
+               :on-mouse-enter #(set-hover true)
+               :on-mouse-leave #(set-hover false)
+               :class ["connection--status-button"
+                       (case (:status state)
+                         :open "connection--status-button-connected"
+                         :closed "connection--status-button-disconnected")]}
       (case (:status state)
         :open [:<>
                [:span {:class "connection--status-indicator-connected"}]
-               "Connected"]
+               (if hover
+                 "Disconnect"
+                 "Connected")]
         :closed [:<>
                  [:span {:class "connection--status-indicator-disconnected"}]
-                 "Disconnected"])]]))
+                 (if hover
+                   "Connect"
+                   "Disconnected")])]]))
 
 (defn ^:export ^:dev/after-load start []
   (println "Starting!")
