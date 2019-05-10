@@ -35,12 +35,12 @@ code {
     border: 0;
     font-size: 0.8rem;
     border-radius: 5px;
-    padding: 3px 8px 3px 0px;
-    background: #dedede;
+    padding: 3px 10px 3px 0px;
+    background: #eee;
 }
 
 .connection--status-button:hover {
-    background: #eee;
+    background: #fff;
     cursor: pointer;
 }
 
