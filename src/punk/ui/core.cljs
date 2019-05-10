@@ -174,16 +174,15 @@
 (defnc Inspector [{:keys [value on-next on-back on-breadcrumb]}]
   (let [[current-view set-current-view] (hooks/useState :punk.view/tree)]
     [:div {:class "inspector"
-           :style {:position "relative"}}
+           :style {:position "relative"
+                   :display "flex"
+                   :flex-direction "column"}}
      [:div {:style {:flex 1
                     :min-height "0px"
                     :overflow-y "scroll"}}
       [(views current-view) {:value value}]]
      [:div {:style {:background "#ffffef"
                     :height "35px"
-                    :position "absolute"
-                    :bottom 0
-                    :width "100%"
                     :z-index 2}}
       [:select {:value (str current-view)
                 :on-change #(set-current-view (keyword (s/replace-first (-> % .-target .-value) #":" "")))}
@@ -206,14 +205,10 @@
 (defn useChan [chan on-take on-close]
   (let [cleanup? (hooks/useIRef false)
         deps (hooks/useIRef chan)]
-    (prn (= chan @deps))
     (hooks/useEffect
      (fn []
-       (prn "Channel open")
        (a/go-loop []
          (let [v (a/<! chan)]
-           (prn v)
-
            (if (or @cleanup? (nil? v))
              (on-close)
              (do (on-take v)
@@ -235,13 +230,14 @@
   (prn "Channel closed"))
 
 (defnc Main [{:keys [initial-taps tap-chan]}]
-  (let [[router update-router] (hooks/useState {:current :tap-list
-                                                :routes [{:id :tap-list
-                                                          :label "Tap list"}
-                                                         {:id :inspector
-                                                          :label "Inspector"}]})
+  (let [[router update-router] (alpha/useStateOnce {:current :tap-list
+                                                    :routes [{:id :tap-list
+                                                              :label "Tap list"}
+                                                             {:id :inspector
+                                                              :label "Inspector"}]}
+                                                   ::router)
         [tap-list update-taps] (alpha/useReducerOnce taps-reducer (or initial-taps '()) ::tap-list)
-        [inspected-value update-inspected] (hooks/useState nil)
+        [inspected-value update-inspected] (alpha/useStateOnce nil ::inspected)
         set-route #(update-router assoc :current %)]
     (useChan tap-chan
              update-taps

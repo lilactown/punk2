@@ -264,6 +264,10 @@ code {
     padding-left: 10px;
 }
 
+.inspector--tree-node--item > div:hover {
+    cursor: pointer;
+}
+
 .inspector--tree-node--label {
     padding-right: 15px;
 }
@@ -299,9 +303,8 @@ code {
 
 }
 
-.inspector--tree-node--arrow:hover {
-    cursor: pointer;
-}
+/* .inspector--tree-node--arrow:hover { */
+/* } */
 
 .inspector--tree-node--arrow:after {
     content: "▾";
@@ -316,9 +319,9 @@ code {
 
 }
 
-.inspector--tree-node--arrow-collapsed:hover {
-    cursor: pointer;
-}
+/* .inspector--tree-node--arrow-collapsed:hover { */
+/*     cursor: pointer; */
+/* } */
 
 .inspector--tree-node--arrow-collapsed:after {
     content: "▾";
