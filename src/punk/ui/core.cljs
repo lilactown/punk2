@@ -229,10 +229,10 @@
 (defn on-close []
   (prn "Channel closed"))
 
-(defnc Main [{:keys [initial-taps tap-chan]}]
+(defnc Main [{:keys [initial-taps tap-chan error-chan]}]
   (let [[router update-router] (alpha/useStateOnce {:current :tap-list
                                                     :routes [{:id :tap-list
-                                                              :label "Tap list"}
+                                                              :label "Taps"}
                                                              {:id :inspector
                                                               :label "Inspector"}]}
                                                    ::router)

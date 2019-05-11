@@ -94,6 +94,7 @@ code {
     border-bottom: 0;
     margin-left: 5px;
     margin-bottom: -1px;
+    min-width: 60px;
 }
 
 .top-controls--tab-selected {
