@@ -11,6 +11,8 @@
 
 (defonce out-chan (a/chan))
 
+(defonce error-chan (a/chan))
+
 ;; (defonce subscriber core/external-handler)
 
 ;; (f/reg-fx
@@ -38,6 +40,9 @@
                        (fn [ev]
                          (js/console.log (.-data ev) (encode/read (.-data ev)))
                          (a/put! in-chan (encode/read (.-data ev)))))
+    (.addEventListener conn "error"
+                       (fn [e]
+                         (a/put! error-chan e)))
     (.addEventListener conn "close"
                        (fn [ev]
                          (swap! state assoc :status :closed)))
@@ -49,7 +54,6 @@
         (recur)))))
 
 (defn close []
-  (prn "closign")
   (when (:conn @state)
     (.close (:conn @state))))
 
@@ -118,11 +122,7 @@
   (println "Starting!")
   (when (= :closed (:status @state))
     (connect {:port 9876}))
-  (let [container (or (. js/document getElementById "remote-app")
-                      (let [new-container (. js/document createElement "div")]
-                        (. new-container setAttribute "id" "remote-app")
-                        (-> js/document .-body (.appendChild new-container))
-                        new-container))]
+  (let [container (. js/document getElementById "remote-app")]
     (react-dom/render (hx/f [:<>
                              [Connection]
                              [core/Main {:tap-chan in-chan}]]) container)))
