@@ -102,7 +102,7 @@ code {
     padding: 5px;
     padding-right: 0;
     margin: 5px auto;
-    border: 1px solid #333;
+    border: 1px solid rgba(160, 50, 50, 1);
     color: #fefefe;
 }
 
