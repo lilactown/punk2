@@ -86,8 +86,11 @@ code {
 
 .errors--close {
     padding: 5px;
+    margin-right: 5px;
     border-radius: 50px;
-    margin-left: 5px;
+    position: absolute;
+    right: 0;
+    top: 0;
     color: rgba(160, 50, 50, 1);
 }
 
@@ -98,12 +101,14 @@ code {
 .errors--message {
     text-align: center;
     background: rgba(250, 80, 80, 1);
-    width: 400px;
+    width: 440px;
     padding: 5px;
-    padding-right: 0;
+    padding-left: 20px;
+    padding-right: 20px;
     margin: 5px auto;
     border: 1px solid rgba(160, 50, 50, 1);
     color: #fefefe;
+    position: relative;
 }
 
 /* .connection--status-indicator-connected::after { */

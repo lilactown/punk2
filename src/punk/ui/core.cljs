@@ -244,8 +244,7 @@
              ::errors)
     [:div {:class "errors"}
      (for [err live-errors]
-       [:div {:class "errors--message"
-              }
+       [:div {:class "errors--message"}
         (:message err)
         [:span {:class "errors--close"
                 :on-click #(set-live-errors disj err)}

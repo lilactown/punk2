@@ -53,7 +53,11 @@
                                       "An error occurred in the web socket connection.")})))
     (.addEventListener conn "close"
                        (fn [ev]
-                         (swap! state assoc :status :closed)))
+                         (swap! state assoc :status :closed)
+                         (a/put!
+                          error-chan
+                          {:ts (js/Date.now)
+                           :message "WebSocket connection closed."})))
 
     ;; send socket messages
     (a/go-loop []
