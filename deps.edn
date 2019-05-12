@@ -5,4 +5,5 @@
         lilactown/hx {:local/root "../clojure/hx/"};; {:mvn/version "0.5.1"}
         lilactown/hx-frisk {:mvn/version "0.0.2-SNAPSHOT"}
         ;; lilactown/clinch {:mvn/version "1.0.0"}
-        com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}}}
+        com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}
+        datascript {:mvn/version"0.18.2"}}}

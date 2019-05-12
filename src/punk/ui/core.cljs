@@ -10,7 +10,8 @@
             [clojure.pprint]
             ["react-syntax-highlighter" :as rsh]
             ["react-syntax-highlighter/dist/esm/styles/hljs" :as hljs]
-            [goog.object :as gobj]))
+            [goog.object :as gobj]
+            [datascript.core :as ds]))
 
 (def routing-context (hx/create-context))
 
@@ -201,22 +202,22 @@
         (:label route)])]))
 
 
-
 (defn useChan [chan on-take on-close tag]
-  (let [cleanup? (hooks/useIRef false)
-        dep (hooks/useIRef on-take)]
-    (hooks/useEffect
-     (fn []
-       ;; (js/console.log :useChan :resub tag on-take (= on-take @dep))
+  (hooks/useEffect
+   (fn []
+     ;; (js/console.log :useChan :resub tag on-take (= on-take @dep))
+     (let [cleanup? (a/chan)]
        (a/go-loop []
-         (let [v (a/<! chan)]
-           ;; (js/console.log :useChan tag v)
-           (if (or @cleanup? (nil? v))
-             (on-close)
-             (do (on-take v)
-                 (recur)))))
-       #(reset! cleanup? true))
-     [chan on-take on-close])))
+         (let [[v ch] (a/alts! [chan cleanup?])]
+           (cond
+             (= ch cleanup?) (on-close)
+             (nil? v) (on-close)
+             :else (do (on-take v)
+                       (recur)))))
+         #(do (prn "unmounting")
+              (a/put! cleanup? true))))
+   [chan on-take on-close]))
+
 
 (defn taps-reducer [taps-list [ev & payload]]
   (case ev
@@ -226,7 +227,6 @@
                               :value (:value payload)
                               :metadata (:meta payload)
                               :ts (js/Date.now)}))))
-
 
 (defn on-close []
   (prn "Channel closed"))
@@ -250,22 +250,115 @@
                 :on-click #(set-live-errors disj err)}
          "ⅹ"]])]))
 
+(defn useDataScript [schema init]
+  (let [conn (hooks/useMemo #(let [conn (ds/create-conn schema)]
+                               (prn "creating db")
+                               (ds/transact! conn init)
+                               conn)
+                            [schema init])
+        [db set-db] (hooks/useState @conn)
+        transact (hooks/useCallback (fn [tx-data]
+                                      (ds/transact! conn tx-data)
+                                      (set-db @conn))
+                                    [set-db conn])]
+    (prn db)
+    [db transact]))
+
+(defn useDb [{:keys [schema init reducer subscriber]}]
+  (let [[db transact] (useDataScript schema init)
+        dispatch (hooks/useMemo (fn []
+                                  (prn "new dispatch")
+                                  (fn [event]
+                                    (if-let [transaction (reducer event)]
+                                      (transact transaction)
+                                      (js/console.log "Empty transaction returned from reducer!"))))
+                                    [transact reducer])
+        subscribe (hooks/useCallback (fn [id opts]
+                                       (subscriber db id opts))
+                                     [subscriber db])]
+    [db dispatch subscribe]))
+
+(defmulti db-event first)
+
+(defmethod db-event :navigation/push [[_ route-id]]
+  [{:db/id -1 :navigation.history/route route-id}])
+
+(defmethod db-event :entry [[_ id value]]
+  [{:db/id -1
+    :entry/value value
+    :entry/id id
+    :entry/ts (js/Date.now)}])
+
+(defmethod db-event :inspect [[_ id]]
+  [{:db/id -1 :inspector/value id}])
+
+(defmulti db-subscribe (fn [app-db id _] id))
+
+(defmethod db-subscribe :navigation/current [app-db _ _]
+  (->> (ds/q '[:find ?v ?tx :where [?e :navigation.history/route ?v ?tx]] app-db)
+       (sort-by second)
+       (reverse)
+       (ffirst)))
+
+(defmethod db-subscribe :navigation/router [app-db _ _]
+  {:current (db-subscribe app-db :navigation/current nil)
+   :routes (map (fn [[id label]] {:id id :label label})
+                (ds/q '[:find ?id ?label
+                        :where
+                        [?e :navigation.route/id ?id]
+                        [?e :navigation.route/label ?label]]
+                      app-db))})
+
+(defmethod db-subscribe :taps/entries [app-db _ _]
+  (->> (ds/q '[:find ?tx ?id ?v ?ts
+               :where
+               [?e :entry/value ?v ?tx]
+               [?e :entry/id ?id ?tx]
+               [?e :entry/ts ?ts ?tx]]
+             app-db)
+       (sort-by first)
+       (reverse)
+       (map (fn [[_ id v ts]]
+              {:id id
+               :value (:value v)
+               :ts ts}))))
+
+(defmethod db-subscribe :inspector/current [app-db _ _]
+  (->> (ds/q '[:find ?v ?tx :where [?e :inspector/value ?v ?tx]] app-db)
+       (sort-by second)
+       (reverse)
+       (ffirst)))
+
+(def db-config
+  {:schema nil
+   :init [{:db/id -1
+           :navigation.route/id :tap-list
+           :navigation.route/label "Taps"}
+          {:db/id -2
+           :navigation.route/id :inspector
+           :navigation.route/label "Inspector"}
+          {:db/id -3
+           :navigation.history/route :tap-list}]
+   :reducer db-event
+   :subscriber db-subscribe})
+
 (defnc Main [{:keys [initial-taps tap-chan error-chan]}]
-  (let [[router update-router] (alpha/useStateOnce {:current :tap-list
-                                                    :routes [{:id :tap-list
-                                                              :label "Taps"}
-                                                             {:id :inspector
-                                                              :label "Inspector"}]}
-                                                   ::router)
-        [tap-list update-taps] (alpha/useReducerOnce taps-reducer (or initial-taps '()) ::tap-list)
+  (let [[app-db dispatch-db subscribe-db] (useDb db-config)
+        ;; [tap-list update-taps] (alpha/useReducerOnce taps-reducer (or initial-taps '()) ::tap-list)
+        update-taps (hooks/useMemo (fn []
+                                     (prn "new update-taps")
+                                     (fn [v]
+                                         (dispatch-db v)))
+                                       [dispatch-db])
         [inspected-value update-inspected] (alpha/useStateOnce nil ::inspected)
-        set-route #(update-router assoc :current %)]
+        set-route #(dispatch-db [:navigation/push %])]
+    (prn (subscribe-db :taps/entries))
     (useChan tap-chan
              update-taps
              on-close
              ::taps)
     [:provider {:context routing-context
-                :value [router set-route]}
+                :value [(subscribe-db :navigation/router) set-route]}
      [Errors {:chan error-chan}]
      [:div {:style {:border "1px solid #d3d3d3"
                     :height "100%"
@@ -278,8 +371,8 @@
                      :flex 1
                      :min-height "0px"
                      :overflow-y "scroll"}}
-       (case (:current router)
-         :tap-list [TapList {:entries tap-list
+       (case (subscribe-db :navigation/current)
+         :tap-list [TapList {:entries (subscribe-db :taps/entries)
                              :inspect-value #(do (update-inspected (:value %))
                                                  (set-route :inspector))}]
          :inspector [Inspector {:value inspected-value}])]]]))
