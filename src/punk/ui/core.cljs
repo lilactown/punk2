@@ -202,13 +202,15 @@
 
 
 
-(defn useChan [chan on-take on-close]
+(defn useChan [chan on-take on-close tag]
   (let [cleanup? (hooks/useIRef false)
-        deps (hooks/useIRef chan)]
+        dep (hooks/useIRef on-take)]
     (hooks/useEffect
      (fn []
+       ;; (js/console.log :useChan :resub tag on-take (= on-take @dep))
        (a/go-loop []
          (let [v (a/<! chan)]
+           ;; (js/console.log :useChan tag v)
            (if (or @cleanup? (nil? v))
              (on-close)
              (do (on-take v)
@@ -229,6 +231,26 @@
 (defn on-close []
   (prn "Channel closed"))
 
+(defnc Errors [{:keys [chan]}]
+  (let [[errors set-errors] (alpha/useStateOnce [] ::errors)
+        [live-errors set-live-errors] (alpha/useStateOnce #{} ::live-errors)
+        add-error (hooks/useCallback #(do (set-errors conj %)
+                                          (set-live-errors conj %)) [set-errors])]
+    (js/console.log "errors" errors)
+    (useChan chan
+             add-error
+             ;; should never close
+             identity
+             ::errors)
+    [:div {:class "errors"}
+     (for [err live-errors]
+       [:div {:class "errors--message"
+              }
+        (:message err)
+        [:span {:class "errors--close"
+                :on-click #(set-live-errors disj err)}
+         "ⅹ"]])]))
+
 (defnc Main [{:keys [initial-taps tap-chan error-chan]}]
   (let [[router update-router] (alpha/useStateOnce {:current :tap-list
                                                     :routes [{:id :tap-list
@@ -241,9 +263,11 @@
         set-route #(update-router assoc :current %)]
     (useChan tap-chan
              update-taps
-             on-close)
+             on-close
+             ::taps)
     [:provider {:context routing-context
                 :value [router set-route]}
+     [Errors {:chan error-chan}]
      [:div {:style {:border "1px solid #d3d3d3"
                     :height "100%"
                     :display "flex"

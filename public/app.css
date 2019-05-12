@@ -72,7 +72,38 @@ code {
     margin-left: 5px;
     margin-right: 10px;
     margin-bottom: -2px;
-    background: rgba(250, 50, 50, 1);
+    background: rgba(250, 80, 80, 1);
+}
+
+
+.errors {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+}
+
+.errors--close {
+    padding: 5px;
+    border-radius: 50px;
+    margin-left: 5px;
+    color: rgba(160, 50, 50, 1);
+}
+
+.errors--close:hover {
+    cursor: pointer;
+}
+
+.errors--message {
+    text-align: center;
+    background: rgba(250, 80, 80, 1);
+    width: 400px;
+    padding: 5px;
+    padding-right: 0;
+    margin: 5px auto;
+    border: 1px solid #333;
+    color: #fefefe;
 }
 
 /* .connection--status-indicator-connected::after { */

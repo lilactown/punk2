@@ -30,7 +30,9 @@
 
 (defn connect [{:keys [port]}]
   (let [conn (js/WebSocket. "ws://localhost:9876/ws")]
-    (swap! state assoc :conn conn)
+    (swap! state assoc
+           :conn conn
+           :status :connecting)
     ;; websocket config
     (.addEventListener conn "open"
                        (fn [ev]
@@ -42,7 +44,13 @@
                          (a/put! in-chan (encode/read (.-data ev)))))
     (.addEventListener conn "error"
                        (fn [e]
-                         (a/put! error-chan e)))
+                         (a/put!
+                          error-chan
+                          {:ts (js/Date.now)
+                           :value e
+                           :message (if (= (:status @state) :connecting)
+                                      "An error occurred connecting to the remote server."
+                                      "An error occurred in the web socket connection.")})))
     (.addEventListener conn "close"
                        (fn [ev]
                          (swap! state assoc :status :closed)))
@@ -99,19 +107,23 @@
      ;; (prn-str state)
      [:button {:on-click (case (:status state)
                            :open #(close)
-                           :closed #(connect {:port 9876}))
+                           :closed #(connect {:port 9876})
+                           :connecting nil)
                :on-mouse-enter #(set-hover true)
                :on-mouse-leave #(set-hover false)
                :class ["connection--status-button"
                        (case (:status state)
                          :open "connection--status-button-connected"
-                         :closed "connection--status-button-disconnected")]}
+                         :closed "connection--status-button-disconnected"
+                         :connecting nil)]}
       (case (:status state)
         :open [:<>
                [:span {:class "connection--status-indicator-connected"}]
                (if hover
                  "Disconnect"
                  "Connected")]
+        :connecting [:span {:class "connection--status-indicator-connecting"}
+                     "Connecting"]
         :closed [:<>
                  [:span {:class "connection--status-indicator-disconnected"}]
                  (if hover
@@ -125,4 +137,5 @@
   (let [container (. js/document getElementById "remote-app")]
     (react-dom/render (hx/f [:<>
                              [Connection]
-                             [core/Main {:tap-chan in-chan}]]) container)))
+                             [core/Main {:tap-chan in-chan
+                                         :error-chan error-chan}]]) container)))
