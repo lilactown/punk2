@@ -16,7 +16,7 @@
                                                 (let [{:keys [db-after] :as tx-info} (ds/with db tx-data)]
                                                   [db-after tx-info]))))
                                     [set-db db])]
-    (prn db)
+    ;; (prn db)
     [db transact]))
 
 (defn useDb [{:keys [schema init reducer subscriber]}]

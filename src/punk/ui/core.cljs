@@ -7,12 +7,10 @@
             [cljs-time.coerce :as tc]
             [clojure.core.async :as a]
             [clojure.string :as s]
-            [clojure.pprint]
-            ["react-syntax-highlighter" :as rsh]
-            ["react-syntax-highlighter/dist/esm/styles/hljs" :as hljs]
             [goog.object :as gobj]
             [datascript.core :as ds]
-            [punk.ui.lib :as lib]))
+            [punk.ui.lib :as lib]
+            [punk.ui.views :as views]))
 
 (def routing-context (hx/create-context))
 
@@ -20,34 +18,14 @@
 
 
 ;;
-;; events
+;; DB
 ;;
 
 (defmulti db-event (fn [ev]
                      (prn ev)
                      (first ev)))
 
-
-
-
-;;
-;; subscriptions
-;;
-
 (defmulti db-subscribe (fn [app-db id _] id))
-
-(defmethod db-subscribe :inspector/current [app-db _ _]
-  (->> (ds/q '[:find ?v ?tx :where [?e :inspector/value ?v ?tx]] app-db)
-       (sort-by second)
-       (reverse)
-       (ffirst)))
-
-
-
-;;
-;; DB
-;;
-
 
 (def db-config
   {:schema nil
@@ -63,111 +41,6 @@
    :subscriber db-subscribe})
 
 
-
-
-;;
-;; Views
-;;
-
-(defnc Code [{:keys [value pprint?]}]
-  [rsh/default {:language "clojure"
-                :style hljs/githubGist
-                :customStyle (if pprint?
-                               #js {:padding 0
-                                    :background "none"}
-                               #js {:padding 0
-                                    :background "none"
-                                    :overflowX "hidden"})}
-   (if pprint?
-     (with-out-str
-       (cljs.pprint/pprint value))
-     (pr-str value))])
-
-
-(defnc CodeView [props]
-  [:div {:style {:overflow "auto"
-                 :max-height "100%"}
-         :class "inspector--code-view"}
-   [Code (assoc props :pprint? true)]])
-
-(defnc CollView [{:keys [value]}]
-  (let [[current update-current] (hooks/useState 0)]
-    [:div {:class "inspector--coll-view"}
-     [:div {:class "inspector--coll-view--indices"
-            :style {:overflow "scroll"}}
-      (map-indexed (fn [idx _]
-                     (vector :div
-                             (merge {:on-click #(update-current idx)}
-                                    (when (= idx current)
-                                      {:class "inspector--coll-view--indices-selected"})) idx))
-                   value)]
-     [:div {:style {:flex 1
-                    :padding "0 10px"}
-            :class "inspector--coll-view--body"}
-      [Code {:value (nth value current)
-             :pprint? true}]]]))
-
-
-(defnc TreeNode [{:keys [label value collapsed/default on-collapse children]}]
-  (let [[collapsed? set-collapsed] (hooks/useState default)]
-    [:div {:class "inspector--tree-node"}
-     [:div {:class "inspector--tree-node--item"}
-      [:div {:on-click #(set-collapsed not)}
-       [:div {:class (if collapsed?
-                       "inspector--tree-node--arrow-collapsed"
-                       "inspector--tree-node--arrow")}]
-       [:div {:class "inspector--tree-node--label"} label]]
-      [:span {:class "inspector--tree-node--preview"}
-       (when collapsed?
-         [Code {:pprint? false :value value}])]]
-     [:div {:class (if collapsed?
-                     "inspector--tree-node--container-collapsed"
-                     "inspector--tree-node--container")}
-      (when-not collapsed?
-        children)]]))
-
-
-(defnc Tree [{:keys [value]}]
-  [:div
-   (cond
-     (sequential? value)
-     (for [[idx node] (map-indexed #(vector %1 %2) value)]
-       [TreeNode {:label [Code {:value idx}] :value node :collapsed/default true :key idx}
-        [Tree {:value node}]])
-
-     (map? value)
-     (for [[k node] value]
-       [TreeNode {:label [Code {:value k}] :value node :collapsed/default true :key k}
-        [Tree {:value node}]])
-
-
-     (set? value)
-     (for [[idx node] (map-indexed #(vector %1 %2) value)]
-       [TreeNode {:label nil :value node :collapsed/default true :key idx}
-        [Tree {:value node}]])
-
-     :else [Code {:value value}])])
-
-
-(defnc TreeView [{:keys [value on-nav]}]
-  [:div {:class "inspector--tree-view"}
-   (cond
-     (sequential? value)
-     (for [[idx node] (map-indexed #(vector %1 %2) value)]
-       [TreeNode {:label [Code {:value idx}] :value node :collapsed/default true :key idx}
-        [Tree {:value node}]])
-
-     (map? value)
-     (for [[k node] value]
-       [TreeNode {:label [Code {:value k}] :value node :collapsed/default true :key k}
-        [Tree {:value node}]])
-
-     (set? value)
-     (for [[idx node] (map-indexed #(vector %1 %2) value)]
-       [TreeNode {:label nil :value node :collapsed/default true :key idx}
-        [Tree {:value node}]])
-
-     :else [Code {:value value}])])
 
 
 ;;
@@ -193,7 +66,7 @@
           (t/to-default-time-zone)
           (tf/unparse ts-format))]
     [:div {:class "taplist--entry--value"}
-     [Code {:value value :pprint? selected?}]]
+     [views/Code {:value value :pprint? selected?}]]
     #_[:div {:style {:flex 2}} metadata]]])
 
 
@@ -214,9 +87,22 @@
                                           (update-selected id))
                             :on-inspect #(inspect-value entry))])))]))
 
+
+
+;;
+;; Inspector
+;;
+
 (def views
-  {:punk.view/tree TreeView
-   :punk.view/code CodeView})
+  {:punk.view/tree views/TreeView
+   :punk.view/code views/CodeView})
+
+
+(defmethod db-subscribe :inspector/current [app-db _ _]
+  (->> (ds/q '[:find ?v ?tx :where [?e :inspector/value ?v ?tx]] app-db)
+       (sort-by second)
+       (reverse)
+       (ffirst)))
 
 (defnc Inspector [{:keys [value on-next on-back on-breadcrumb]}]
   (let [[current-view set-current-view] (hooks/useState :punk.view/tree)]
@@ -336,11 +222,15 @@
         update-taps dispatch-db
         update-inspected (hooks/useCallback #(dispatch-db [:inspect %]))
         set-route (hooks/useCallback #(dispatch-db [:navigation/push %])
-                                     [dispatch-db])]
+                                     [dispatch-db])
+        [query update-query] (hooks/useState '[:find ?v ?tx :where [?e :entry/value ?v ?tx]])
+        [search update-search] (hooks/useState (str query))]
     (lib/useChan tap-chan
                  update-taps
                  identity
                  ::taps)
+    (do (prn app-db)
+        (prn (ds/q query app-db)))
     [:provider {:context routing-context
                 :value [(subscribe-db :navigation/router) set-route]}
      [Errors {:chan error-chan}]
@@ -359,4 +249,18 @@
          :tap-list [TapList {:entries (subscribe-db :taps/entries)
                              :inspect-value #(do (update-inspected (:value %))
                                                  (set-route :inspector))}]
-         :inspector [Inspector {:value (subscribe-db :inspector/current)}])]]]))
+         :inspector [Inspector {:value (subscribe-db :inspector/current)}])]
+      ;; [:div {:style {:height "180px"
+      ;;                :display "flex"
+      ;;                :flex-direction "column"
+      ;;                :padding "10px"}}
+      ;;  [:div {:style {:text-align "center"}}
+      ;;   [:button {:type "button"
+      ;;             :on-click #(update-query (cljs.reader/read-string search))} "Submit"]]
+      ;;  [:textarea {:type "text"
+      ;;              :value search
+      ;;              :style {:margin "auto"
+      ;;                      :min-width "500px"
+      ;;                      :flex 1}
+      ;;              :on-change #(update-search (-> % .-target .-value))}]]
+      ]]))

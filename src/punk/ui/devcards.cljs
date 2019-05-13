@@ -7,7 +7,8 @@
             ["react-syntax-highlighter" :as rsh]
             ["react-syntax-highlighter/dist/esm/styles/hljs" :as hljs]
             [goog.object :as gobj]
-            [punk.ui.core :as core]))
+            [punk.ui.core :as core]
+            [punk.ui.views :as views]))
 
 (devcards.core/start-devcard-ui!)
 
@@ -32,7 +33,7 @@
                                         :min-height "0px"
                                         :overflow-y "scroll"}}
                           #_[CodeView {:value value}]
-                          [CollView {:value value}]]
+                          [views/CollView {:value value}]]
                          [:div {:style {:background "#ffffef"
                                         :height "35px"}}
                           [:select
@@ -62,31 +63,31 @@
 (dc/defcard code-view
   (hx/f [:div {:style {:height "300px"}
                :class "punk-body-container"}
-         [core/CodeView {:value med-structure}]]))
+         [views/CodeView {:value med-structure}]]))
 
 (dc/defcard coll-view
   (hx/f [:div {:style {:height "300px"}
                :class "punk-body-container"}
-         [core/CollView {:value med-structure}]]))
+         [views/CollView {:value med-structure}]]))
 
 (dc/defcard tree-view
   (hx/f  [:div {:style {:height "300px"}
                 :class "punk-body-container"}
-          [core/TreeView {:value med-structure}]]))
+          [views/TreeView {:value med-structure}]]))
 
 (dc/defcard tree-view--map
   (hx/f  [:div {:style {:height "300px"}
                 :class "punk-body-container"}
-          [core/TreeView {:value {:foo ["bar"]
+          [views/TreeView {:value {:foo ["bar"]
                                   :baz {:asdf 1234 :jkl 5678
                                         ['zxcvbn] {'qwerty 'yuiop}}}}]]))
 
 (dc/defcard tree-view--list
   (hx/f  [:div {:style {:height "300px"}
                 :class "punk-body-container"}
-          [core/TreeView {:value (range 7 23)}]]))
+          [views/TreeView {:value (range 7 23)}]]))
 
 (dc/defcard tree-view--set
   (hx/f  [:div {:style {:height "300px"}
                 :class "punk-body-container"}
-          [core/TreeView {:value #{:foo :bar #{:baz 123 'asdf #{'jkl}}}}]]))
+          [views/TreeView {:value #{:foo :bar #{:baz 123 'asdf #{'jkl}}}}]]))
