@@ -5,6 +5,7 @@
             [hx.react :as hx :refer [defnc]]
             [hx.hooks :as hooks]
             [punk.ui.encode :as encode]
+            ["react" :as react]
             ["react-dom" :as react-dom]))
 
 (defonce in-chan (a/chan))
@@ -106,6 +107,7 @@
 
 (defnc Connection [_]
   (let [state (useDeref state)
+        ;; state {:status :open}
         [hover set-hover] (hooks/useState false)]
     [:div {:class "connection"}
      ;; (prn-str state)
@@ -139,7 +141,8 @@
   (when (= :closed (:status @state))
     (connect {:port 9876}))
   (let [container (. js/document getElementById "remote-app")]
-    (react-dom/render (hx/f [:<>
-                             [Connection]
-                             [core/Main {:tap-chan in-chan
-                                         :error-chan error-chan}]]) container)))
+    (react-dom/render (hx/f [react/unstable_ConcurrentMode
+                             [:<>
+                              [Connection]
+                              [core/Main {:tap-chan in-chan
+                                          :error-chan error-chan}]]]) container)))
