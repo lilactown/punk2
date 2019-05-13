@@ -29,14 +29,7 @@
 
 (def db-config
   {:schema nil
-   :init [{:db/id -1
-           :navigation.route/id :tap-list
-           :navigation.route/label "Taps"}
-          {:db/id -2
-           :navigation.route/id :inspector
-           :navigation.route/label "Inspector"}
-          {:db/id -3
-           :navigation.history/route :tap-list}]
+   :init []
    :reducer db-event
    :subscriber db-subscribe})
 
@@ -223,6 +216,12 @@
         update-inspected (hooks/useCallback #(dispatch-db [:inspect %]))
         set-route (hooks/useCallback #(dispatch-db [:navigation/push %])
                                      [dispatch-db])
+        [router update-router] (alpha/useStateOnce {:current :tap-list
+                                                    :routes [{:id :tap-list
+                                                              :label "Taps"}
+                                                             {:id :inspector
+                                                              :label "Inspector"}]}
+                                                   ::router)
         [query update-query] (hooks/useState '[:find ?v ?tx :where [?e :entry/value ?v ?tx]])
         [search update-search] (hooks/useState (str query))]
     (lib/useChan tap-chan
@@ -232,7 +231,7 @@
     (do (prn app-db)
         (prn (ds/q query app-db)))
     [:provider {:context routing-context
-                :value [(subscribe-db :navigation/router) set-route]}
+                :value [router #(update-router assoc :current %)]}
      [Errors {:chan error-chan}]
      [:div {:style {:border "1px solid #d3d3d3"
                     :height "100%"
@@ -245,7 +244,7 @@
                      :flex 1
                      :min-height "0px"
                      :overflow-y "scroll"}}
-       (case (subscribe-db :navigation/current)
+       (case (:current router)
          :tap-list [TapList {:entries (subscribe-db :taps/entries)
                              :inspect-value #(do (update-inspected (:value %))
                                                  (set-route :inspector))}]
