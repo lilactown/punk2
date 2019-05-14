@@ -90,13 +90,6 @@
   {:punk.view/tree views/TreeView
    :punk.view/code views/CodeView})
 
-
-(defmethod db-subscribe :inspector/current [app-db _ _]
-  (->> (ds/q '[:find ?v ?tx :where [?e :inspector/value ?v ?tx]] app-db)
-       (sort-by second)
-       (reverse)
-       (ffirst)))
-
 (defnc Inspector [{:keys [value on-next on-back on-breadcrumb]}]
   (let [[current-view set-current-view] (hooks/useState :punk.view/tree)]
     [:div {:class "inspector"
@@ -119,10 +112,6 @@
 ;;
 ;; Top controls
 ;;
-
-
-(defmethod db-event :navigation/push [[_ route-id]]
-  [{:db/id -1 :navigation.history/route route-id}])
 
 (defnc TopControls [_]
   (let [[router set-route] (hooks/useContext routing-context)]
@@ -173,26 +162,8 @@
     :entry/id id
     :entry/ts (js/Date.now)}])
 
-(defmethod db-event :inspect [[_ id]]
-  [{:db/id -1 :inspector/value id}])
-
 
 ;; Subscriptions
-
-(defmethod db-subscribe :navigation/current [app-db _ _]
-  (->> (ds/q '[:find ?v ?tx :where [?e :navigation.history/route ?v ?tx]] app-db)
-       (sort-by second)
-       (reverse)
-       (ffirst)))
-
-(defmethod db-subscribe :navigation/router [app-db _ _]
-  {:current (db-subscribe app-db :navigation/current nil)
-   :routes (map (fn [[id label]] {:id id :label label})
-                (ds/q '[:find ?id ?label
-                        :where
-                        [?e :navigation.route/id ?id]
-                        [?e :navigation.route/label ?label]]
-                      app-db))})
 
 (defmethod db-subscribe :taps/entries [app-db _ _]
   (->> (ds/q '[:find ?tx ?id ?v ?ts
@@ -211,17 +182,18 @@
 
 
 (defnc Main [{:keys [initial-taps tap-chan error-chan]}]
-  (let [[app-db dispatch-db subscribe-db] (lib/useDb db-config)
-        update-taps dispatch-db
-        update-inspected (hooks/useCallback #(dispatch-db [:inspect %]))
-        set-route (hooks/useCallback #(dispatch-db [:navigation/push %])
-                                     [dispatch-db])
+  (let [[app-db transact] (lib/useDataScript nil [])
+        update-taps (hooks/useCallback (fn [ev]  (transact (db-event ev)))
+                                       [transact db-event])
         [router update-router] (alpha/useStateOnce {:current :tap-list
                                                     :routes [{:id :tap-list
                                                               :label "Taps"}
                                                              {:id :inspector
                                                               :label "Inspector"}]}
                                                    ::router)
+        set-route (hooks/useCallback #(update-router assoc :current %)
+                                     [update-router])
+        [inspected update-inspected] (alpha/useStateOnce nil ::inspected)
         [query update-query] (hooks/useState '[:find ?v ?tx :where [?e :entry/value ?v ?tx]])
         [search update-search] (hooks/useState (str query))]
     (lib/useChan tap-chan
@@ -231,7 +203,7 @@
     (do (prn app-db)
         (prn (ds/q query app-db)))
     [:provider {:context routing-context
-                :value [router #(update-router assoc :current %)]}
+                :value [router set-route]}
      [Errors {:chan error-chan}]
      [:div {:style {:border "1px solid #d3d3d3"
                     :height "100%"
@@ -245,10 +217,10 @@
                      :min-height "0px"
                      :overflow-y "scroll"}}
        (case (:current router)
-         :tap-list [TapList {:entries (subscribe-db :taps/entries)
+         :tap-list [TapList {:entries (db-subscribe app-db :taps/entries)
                              :inspect-value #(do (update-inspected (:value %))
                                                  (set-route :inspector))}]
-         :inspector [Inspector {:value (subscribe-db :inspector/current)}])]
+         :inspector [Inspector {:value inspected}])]
       ;; [:div {:style {:height "180px"
       ;;                :display "flex"
       ;;                :flex-direction "column"
