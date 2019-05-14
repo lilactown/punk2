@@ -10,7 +10,8 @@
  :builds
  {:app
   {:target :browser
-   :compiler-options {:devcards true}
+   :compiler-options {:devcards true
+                      :externs ["datascript/externs.js"]}
    :devtools {:http-root    "public"
               :http-port    8787
               :preloads     [devtools.preload]}
