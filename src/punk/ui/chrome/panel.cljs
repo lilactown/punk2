@@ -25,7 +25,7 @@
 
 (defmethod route-message! :default
   [message]
-  (log "PANEL: unknown message type" message)
+  (prn "PANEL: unknown message type" message)
   nil)
 
 (defmethod route-message! :content-script/connect
@@ -37,7 +37,7 @@
   (a/put! tap-chan (encode/read message)))
 
 (defn process-message! [message]
-  (log "PANEL: got message:" message)
+  (prn "PANEL: got message:" message)
   (route-message! message))
 
 (defn run-message-loop! [message-channel]

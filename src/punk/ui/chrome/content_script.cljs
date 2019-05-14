@@ -9,11 +9,11 @@
 ;; -- tab messages -------------------------------------------------------------
 
 (defn process-tab-message! [bg-chan message]
-  (log "CONTENT SCRIPT: got tab message:" message)
+  ;; (log "CONTENT SCRIPT: got tab message:" message)
   (post-message! bg-chan (encode/write [:content-script/message message])))
 
 (defn tab-message-loop! [bg-chan tab-chan]
-  (log "CONTENT SCRIPT: starting tab message loop...")
+  ;; (log "CONTENT SCRIPT: starting tab message loop...")
   (go-loop []
     (when-some [message (<! tab-chan)]
       (process-tab-message! bg-chan message)
@@ -37,15 +37,17 @@
 ;; -- background loop ----------------------------------------------------------
 
 (defn process-message! [message]
-  (log "CONTENT SCRIPT: got background message:" message))
+  ;; (log "CONTENT SCRIPT: got background message:" message)
+  )
 
 (defn run-message-loop! [message-channel]
-  (log "CONTENT SCRIPT: starting background message loop...")
+  ;; (log "CONTENT SCRIPT: starting background message loop...")
   (go-loop []
     (when-some [message (<! message-channel)]
       (process-message! (encode/read message))
       (recur))
-    (log "CONTENT SCRIPT: leaving background message loop")))
+    ;; (log "CONTENT SCRIPT: leaving background message loop")
+    ))
 
 (defn connect-to-background-page! []
   (let [background-port (runtime/connect)]
@@ -58,7 +60,7 @@
 ;; -- main entry point ---------------------------------------------------------
 
 (defn init! []
-  (js/console.log "CONTENT SCRIPT: init")
+  ;; (js/console.log "CONTENT SCRIPT: init")
   (connect-to-background-page!)
   )
 

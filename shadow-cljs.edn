@@ -36,5 +36,6 @@
   {:target :browser
    :output-dir "extension/js/ui"
    :asset-path "js/ui"
+   :compiler-options {:externs ["datascript/externs.js"]}
    :modules {:main {:entries [punk.ui.chrome.panel]}}
    :devtools {:devtools-url "http://localhost:9630"}}}}

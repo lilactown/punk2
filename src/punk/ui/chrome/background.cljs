@@ -25,15 +25,15 @@
 (comment (remove-val {:a "b" :c "d"} "b"))
 
 (defn identify-devtool! [devtool tab-id]
-  (log "BACKGROUND: devtool identified" (get-sender devtool) tab-id)
+  (prn "BACKGROUND: devtool identified" (get-sender devtool) tab-id)
   (swap! tab-id->devtool assoc tab-id devtool))
 
 (defn remove-devtool! [devtool]
-  (log "BACKGROUND: devtool disconnected" (get-sender devtool))
+  (prn "BACKGROUND: devtool disconnected" (get-sender devtool))
   (swap! tab-id->devtool remove-val devtool))
 
 (defn inject-content-script! [tab-id]
-  (log "BACKGROUND: injecting content script" tab-id)
+  (prn "BACKGROUND: injecting content script" tab-id)
   (tabs/execute-script tab-id #js {:file "out/content-script.js"}))
 
 ;; -- extension events ---------------------------------------------------------
@@ -51,14 +51,14 @@
 
 (defmethod route-message :content-script/connect
   [client _]
-  (let [tab-id (-> (get-sender client)
+  (let [tab-id (-> ^js (get-sender client)
                    .-tab .-id)]
     (post-message! (@tab-id->devtool tab-id)
                    (encode/write [:content-script/connect tab-id]))))
 
 (defmethod route-message :content-script/message
   [client [_ message]]
-  (let [tab-id (-> (get-sender client)
+  (let [tab-id (-> ^js (get-sender client)
                    .-tab .-id)]
     (post-message! (@tab-id->devtool tab-id)
                    (encode/write [:tab/message message]))))
@@ -67,10 +67,10 @@
 
 
 (defn run-client-message-loop! [client]
-  (log "BACKGROUND: starting event loop for client:" (get-sender client))
+  (prn "BACKGROUND: starting event loop for client:" (get-sender client))
   (go-loop []
     (when-some [message (<! client)]
-      (log "BACKGROUND: got client message:" message "from" (get-sender client))
+      (prn "BACKGROUND: got client message:" message "from" (get-sender client))
       (route-message client (encode/read message))
       (recur))
     (log "BACKGROUND: leaving event loop for client:" (get-sender client))
@@ -88,7 +88,7 @@
 ;; -- main event loop ----------------------------------------------------------
 
 (defn process-chrome-event [event-num event]
-  (log (gstring/format "BACKGROUND: got chrome event (%05d)" event-num) event)
+  (prn (gstring/format "BACKGROUND: got chrome event (%05d)" event-num) event)
   (let [[event-id event-args] event]
     (case event-id
       ::runtime/on-connect (apply handle-client-connection! event-args)
