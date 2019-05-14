@@ -1,18 +1,23 @@
 (ns punk.ui.chrome.panel
   (:require-macros [cljs.core.async.macros :refer [go-loop]])
-  (:require [cljs.core.async :refer [<!]]
+  (:require [cljs.core.async :as a :refer [<!]]
             [chromex.logging :refer-macros [log info warn error group group-end]]
             [chromex.protocols.chrome-port :refer [post-message!]]
             [chromex.ext.runtime :as runtime :refer-macros [connect]]
             [chromex.ext.devtools.inspected-window :as inspected]
+            [hx.react :as hx]
+            ["react-dom" :as rdom]
             [punk.ui.encode :as encode]
-            [punk.ui.chrome.panel.js :as pjs]))
+            [punk.ui.chrome.panel.js :as pjs]
+            [punk.ui.core :as core]))
 
 (def tab-id (inspected/get-tab-id))
 
 (defonce connection (atom nil))
 
 (defonce message-log (atom []))
+
+(defonce tap-chan (a/chan))
 
 ;; -- a message loop -----------------------------------------------------------
 
@@ -27,6 +32,9 @@
   [_]
   (log "PANEL: installing tap")
   (inspected/eval pjs/add-tap!))
+
+(defmethod route-message! :tab/message [[_ message]]
+  (a/put! tap-chan (encode/read message)))
 
 (defn process-message! [message]
   (log "PANEL: got message:" message)
@@ -53,6 +61,8 @@
   (log "PANEL: init")
   (when-not @connection
     (inspected/eval pjs/setup)
-    (reset! connection (connect-to-background-page!))))
+    (reset! connection (connect-to-background-page!)))
+  (rdom/render (hx/f [core/Main {:tap-chan tap-chan}])
+               (.getElementById js/document "app")))
 
 (init!)

@@ -20,8 +20,8 @@ console.log(\"setting up\");
   var entry = cljs.core.vector(
                 " (kw "\"punk/tap\"") ",
                 " (punk :currentId) ",
-                 x,
                  cljs.core.hash_map(
+                   " (kw "\"value\"") ", x,
                    " (kw "\"ts\"") ", Date.now(),
                    " (kw "\"meta\"") ", cljs.core.meta(x)
                  ));

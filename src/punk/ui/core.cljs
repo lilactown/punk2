@@ -154,6 +154,12 @@
     :entry/id id
     :entry/ts (js/Date.now)}])
 
+(defmethod db-event :punk/tap [[_ id value]]
+  [{:db/id -1
+    :entry/value value
+    :entry/id id
+    :entry/ts (js/Date.now)}])
+
 
 ;; Subscriptions
 

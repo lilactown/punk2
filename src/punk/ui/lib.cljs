@@ -19,18 +19,6 @@
     ;; (prn db)
     [db transact]))
 
-(defn useDb [{:keys [schema init reducer subscriber]}]
-  (let [[db transact] (useDataScript schema init)
-        dispatch (hooks/useCallback (fn [event]
-                                      (if-let [transaction (reducer event)]
-                                        (transact transaction)
-                                        (js/console.log "Empty transaction returned from reducer!")))
-                                    [transact reducer])
-        subscribe (hooks/useCallback (fn [id opts]
-                                       (subscriber db id opts))
-                                     [subscriber db])]
-    [db dispatch subscribe]))
-
 (defn useChan [chan on-take on-close tag]
   (hooks/useEffect
    (fn []

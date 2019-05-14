@@ -25,15 +25,16 @@
   {:target :chrome-extension
    :extension-dir "extension"
    :manifest-file "extension/manifest.edn"
+   :compiler-options {:closure-output-charset "US-ASCII"}
    :outputs
    {:background {:output-type :chrome/background
                  :init-fn punk.ui.chrome.background/init!}
     :content-script {:output-type :chrome/single-file
-                     :entries [punk.shells.chrome.content-script]}}}
+                     :entries [punk.ui.chrome.content-script]}}}
 
   :devtools-panel
   {:target :browser
    :output-dir "extension/js/ui"
    :asset-path "js/ui"
-   :modules {:main {:entries [punk.shells.chrome.panel]}}
+   :modules {:main {:entries [punk.ui.chrome.panel]}}
    :devtools {:devtools-url "http://localhost:9630"}}}}
