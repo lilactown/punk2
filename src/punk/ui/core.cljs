@@ -27,14 +27,6 @@
 
 (defmulti db-subscribe (fn [app-db id _] id))
 
-(def db-config
-  {:schema nil
-   :init []
-   :reducer db-event
-   :subscriber db-subscribe})
-
-
-
 
 ;;
 ;; Taps
