@@ -63,6 +63,6 @@
     (inspected/eval pjs/setup)
     (reset! connection (connect-to-background-page!)))
   (rdom/render (hx/f [core/Main {:tap-chan tap-chan}])
-               (.getElementById js/document "app")))
+               (.getElementById js/document "frame")))
 
 (init!)
