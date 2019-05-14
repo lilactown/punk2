@@ -172,8 +172,7 @@
                [?e :entry/id ?id ?tx]
                [?e :entry/ts ?ts ?tx]]
              app-db)
-       (sort-by first)
-       (reverse)
+       (sort-by first #(compare %2 %1))
        (map (fn [[_ id v ts]]
               {:id id
                :value (:value v)
