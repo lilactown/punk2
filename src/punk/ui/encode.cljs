@@ -1,5 +1,6 @@
 (ns punk.ui.encode
-  (:require [cljs.reader :as reader]))
+  (:require [cljs.reader :as reader]
+            [cljs.tagged-literals]))
 
 (defn write [x]
   (prn-str x))
