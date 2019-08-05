@@ -32,30 +32,33 @@
 ;; Taps
 ;;
 
-(defnc TapEntry [{:keys [ts value metadata selected? on-select on-inspect]}]
-  [:div {:class "taplist--entry"}
-   (when selected?
-     [:div {:class "taplist--entry--tools"}
-      [:button
-       {:on-click on-select}
-       [:span {:class "taplist--entry--tools--close-icon"}]]
-      [:button
-       {:on-click on-inspect}
-       [:span {:class "taplist--entry--tools--inspect-icon"}]]])
-   [:div {:style {:display "flex"}
-          :class ["taplist--entry--body" (when selected? "taplist--entry-selected")]
-          :on-click #(when-not selected? (on-select))}
-    [:div {:class "taplist--entry--timestamp"}
-     (->> ts
-          (tc/from-long)
-          (t/to-default-time-zone)
-          (tf/unparse ts-format))]
-    [:div {:class "taplist--entry--value"}
-     [views/Code {:value value :pprint? selected?}]]
-    #_[:div {:style {:flex 2}} metadata]]])
+(defnc TapEntry [{:keys [ts value metadata selected? on-select on-inspect tap-lens]}]
+  (let [lens-value (get-in value tap-lens value)]
+    [:div {:class "taplist--entry"}
+     (when selected?
+       [:div {:class "taplist--entry--tools"}
+        [:button
+         {:on-click on-select}
+         [:span {:class "taplist--entry--tools--close-icon"}]]
+        [:button
+         {:on-click on-inspect}
+         [:span {:class "taplist--entry--tools--inspect-icon"}]]])
+     [:div {:style {:display "flex"}
+            :class ["taplist--entry--body" (when selected? "taplist--entry-selected")]
+            :on-click #(when-not selected? (on-select))}
+      [:div {:class "taplist--entry--timestamp"}
+       (->> ts
+            (tc/from-long)
+            (t/to-default-time-zone)
+            (tf/unparse ts-format))]
+      [:div (cond-> {:class "taplist--entry--value"}
+              (not= lens-value value)
+              (assoc :style {:border "2px solid rgba(0, 250, 0, 0.3)"}))
+       [views/Code {:value lens-value :pprint? selected?}]]
+      #_[:div {:style {:flex 2}} metadata]]]))
 
 
-(defnc TapList [{:keys [entries inspect-value]}]
+(defnc TapList [{:keys [entries inspect-value tap-lens]}]
   (let [[selected update-selected] (alpha/useStateOnce nil ::tap-list.selected)]
     [:div {:class "taplist"}
      (if (empty? entries)
@@ -65,6 +68,7 @@
        (for [entry entries]
          (let [{:keys [id]} entry]
            [TapEntry (assoc entry
+                            :tap-lens tap-lens
                             :key id
                             :selected? (= selected id)
                             :on-select #(if (= selected id)
@@ -72,7 +76,45 @@
                                           (update-selected id))
                             :on-inspect #(inspect-value entry))])))]))
 
+;;
+;; Tap Lens
+;;
 
+(defn- format-lens-part
+  [lens-part]
+  (cond
+    ;; is a keyword
+    (= ":" (first lens-part))
+    (->> lens-part rest (clojure.string/join "") keyword)
+
+    ;; is an index
+    (false? (js/isNaN (js/Number lens-part)))
+    (js/parseInt lens-part 10)
+
+    :else
+    lens-part))
+
+(defn- format-lens
+  [set-lens value]
+  (set-lens (map
+             format-lens-part
+             (clojure.string/split (-> value .-target .-value) #" "))))
+
+(defnc TapLens [{:keys [update-lens]}]
+  (let [bracket-styles {:font-size "20px"}]
+    [:div {:style {:display "flex"
+                   :align-items "center"
+                   :width "100%"
+                   :padding "20px"}}
+     [:span {:style bracket-styles} "["]
+     [:input {:style {:width "100%"
+                      :margin-left "20px"
+                      :margin-right "20px"
+                      :height "30px"
+                      :padding "8px"}
+              :on-change update-lens
+              :placeholder "Search in object (ex: :some :deep :value)"}]
+     [:span {:style bracket-styles} "]"]]))
 
 ;;
 ;; Inspector
@@ -82,7 +124,7 @@
   {:punk.view/tree views/TreeView
    :punk.view/code views/CodeView})
 
-(defnc Inspector [{:keys [value on-next on-back on-breadcrumb]}]
+(defnc Inspector [{:keys [value]}]
   (let [[current-view set-current-view] (hooks/useState :punk.view/tree)]
     [:div {:class "inspector"
            :style {:position "relative"
@@ -192,13 +234,17 @@
                                      [update-router])
         [inspected update-inspected] (alpha/useStateOnce nil ::inspected)
         [query update-query] (hooks/useState '[:find ?v ?tx :where [?e :entry/value ?v ?tx]])
-        [search update-search] (hooks/useState (str query))]
+        [search update-search] (hooks/useState (str query))
+        [tap-lens update-lens] (hooks/useState '())]
+
     (lib/useChan tap-chan
                  update-taps
                  identity
                  ::taps)
+
     (do (prn app-db)
         (prn (ds/q query app-db)))
+
     [:provider {:context routing-context
                 :value [router set-route]}
      [Errors {:chan error-chan}]
@@ -213,11 +259,15 @@
                      :flex 1
                      :min-height "0px"
                      :overflow-y "scroll"}}
+
+       [TapLens {:update-lens (partial format-lens update-lens)}]
+
        (case (:current router)
          :tap-list [TapList {:entries (db-subscribe app-db :taps/entries)
                              :inspect-value #(do (update-inspected (:value %))
-                                                 (set-route :inspector))}]
-         :inspector [Inspector {:value inspected}])]
+                                                 (set-route :inspector))
+                             :tap-lens tap-lens}]
+         :inspector [Inspector {:value (get-in inspected tap-lens inspected)}])]
       ;; [:div {:style {:height "180px"
       ;;                :display "flex"
       ;;                :flex-direction "column"
