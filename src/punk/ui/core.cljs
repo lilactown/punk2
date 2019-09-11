@@ -22,7 +22,6 @@
 ;;
 
 (defmulti db-event (fn [ev]
-                     (prn ev)
                      (first ev)))
 
 (defmulti db-subscribe (fn [app-db id _] id))
@@ -197,8 +196,6 @@
                  update-taps
                  identity
                  ::taps)
-    (do (prn app-db)
-        (prn (ds/q query app-db)))
     [:provider {:context routing-context
                 :value [router set-route]}
      [Errors {:chan error-chan}]

@@ -2,34 +2,52 @@
   (:require [hx.react :as hx :refer [defnc]]
             [hx.hooks :as hooks]
             [hx.hooks.alpha :as alpha]
+            ["react" :as react]
+            [goog.object :as gobj]
             [clojure.pprint]
             ["react-syntax-highlighter" :as rsh]
             ["react-syntax-highlighter/dist/esm/styles/hljs" :as hljs]))
+
+(defn trunc
+  [s n]
+  (subs s 0 (min (count s) n)))
 
 ;;
 ;; Views
 ;;
 
-(defnc Code [{:keys [value pprint?]}]
-  [rsh/default {:language "clojure"
-                :style hljs/githubGist
-                :customStyle (if pprint?
-                               #js {:padding 0
-                                    :background "none"}
-                               #js {:padding 0
-                                    :background "none"
-                                    :overflowX "hidden"})}
-   (if pprint?
-     (with-out-str
-       (cljs.pprint/pprint value))
-     (pr-str value))])
+(defnc Code [{:keys [value pprint? renderer]}]
+  ;; {:wrap [(react/memo (fn [prev-props props]
+  ;;                       (and
+  ;;                        (= (gobj/get props "value")
+  ;;                              (gobj/get prev-props "value"))
+  ;;                        (= (gobj/get props "pprint?")
+  ;;                              (gobj/get prev-props "pprint?")))))]}
+  (let [val-str (if pprint?
+                  (with-out-str
+                    (cljs.pprint/pprint value))
+                  (pr-str value))]
+    (prn "render")
+    (if (> (count val-str) 500)
+      [:pre [:code val-str]]
+      [rsh/default {:language "clojure"
+                    :style hljs/githubGist
+                    :renderer renderer
+                    :customStyle (if pprint?
+                                   #js {:padding 0
+                                        :background "none"}
+                                   #js {:padding 0
+                                        :background "none"
+                                        :overflowX "hidden"})}
+       val-str])))
 
 
 (defnc CodeView [props]
   [:div {:style {:overflow "auto"
                  :max-height "100%"}
          :class "inspector--code-view"}
-   [Code (assoc props :pprint? true)]])
+   [Code (assoc props
+                :pprint? true)]])
 
 (defnc CollView [{:keys [value]}]
   (let [[current update-current] (hooks/useState 0)]

@@ -9,13 +9,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "shadow-cljs": "^2.8.26"
+    "shadow-cljs": "2.8.52"
   },
   "dependencies": {
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-is": "^16.8.6",
-    "react-syntax-highlighter": "^10.2.1",
+    "react-syntax-highlighter": "^10.3.5",
+    "react-syntax-highlighter-virtualized-renderer": "^1.1.0",
     "showdown": "^1.9.0"
   }
 }

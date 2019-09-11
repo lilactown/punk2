@@ -37,7 +37,7 @@
   (a/put! tap-chan (encode/read message)))
 
 (defn process-message! [message]
-  (prn "PANEL: got message:" message)
+  (prn "PANEL: got message:" #_message)
   (route-message! message))
 
 (defn run-message-loop! [message-channel]
