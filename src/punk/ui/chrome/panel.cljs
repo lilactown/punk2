@@ -19,6 +19,8 @@
 
 (defonce tap-chan (a/chan))
 
+(defonce error-chan (a/chan))
+
 ;; -- a message loop -----------------------------------------------------------
 
 (defmulti route-message! (fn [[type _]] type))
@@ -34,7 +36,11 @@
   (inspected/eval pjs/add-tap!))
 
 (defmethod route-message! :tab/message [[_ message]]
-  (a/put! tap-chan (encode/read message)))
+  (try
+    (a/put! tap-chan (encode/read message))
+    (catch js/Error e
+      (js/console.log e)
+      (a/put! error-chan e))))
 
 (defn process-message! [message]
   (prn "PANEL: got message:" #_message)
@@ -45,7 +51,10 @@
   (go-loop []
     (when-some [message (<! message-channel)]
       (swap! message-log conj message)
-      (process-message! (encode/read message))
+      (try
+        (process-message! (encode/read message))
+        (catch js/Error e
+          (log "Error in message loop:" e)))
       (recur))
     (log "PANEL: leaving message loop")))
 
@@ -62,7 +71,8 @@
   (when-not @connection
     (inspected/eval pjs/setup)
     (reset! connection (connect-to-background-page!)))
-  (rdom/render (hx/f [core/Main {:tap-chan tap-chan}])
+  (rdom/render (hx/f [core/Main {:tap-chan tap-chan
+                                 :error-chan error-chan}])
                (.getElementById js/document "frame")))
 
 (init!)
