@@ -26,8 +26,7 @@
   (let [val-str (if pprint?
                   (with-out-str
                     (cljs.pprint/pprint value))
-                  (pr-str value))]
-    (prn "render")
+                  (trunc (pr-str value) 200))]
     (if (> (count val-str) 500)
       [:pre [:code val-str]]
       [rsh/default {:language "clojure"
